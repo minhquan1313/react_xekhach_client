@@ -1,0 +1,108 @@
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-Black.woff2");
+  font-style: normal;
+  font-weight: 900;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-BlackItalic.woff2");
+  font-style: italic;
+  font-weight: 900;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-ExtraBold.woff2");
+  font-style: normal;
+  font-weight: 800;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-ExtraBoldItalic.woff2");
+  font-style: italic;
+  font-weight: 800;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-Bold.woff2");
+  font-style: normal;
+  font-weight: 700;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-BoldItalic.woff2");
+  font-style: italic;
+  font-weight: 700;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-SemiBold.woff2");
+  font-style: normal;
+  font-weight: 600;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-SemiBoldItalic.woff2");
+  font-style: italic;
+  font-weight: 600;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-Medium.woff2");
+  font-style: normal;
+  font-weight: 500;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-MediumItalic.woff2");
+  font-style: italic;
+  font-weight: 500;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-Regular.woff2");
+  font-style: normal;
+  font-weight: 400;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-Italic.woff2");
+  font-style: italic;
+  font-weight: 400;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-Light.woff2");
+  font-style: normal;
+  font-weight: 300;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-LightItalic.woff2");
+  font-style: italic;
+  font-weight: 300;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-ExtraLight.woff2");
+  font-style: normal;
+  font-weight: 200;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-ExtraLightItalic.woff2");
+  font-style: italic;
+  font-weight: 200;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-Thin.woff2");
+  font-style: normal;
+  font-weight: 100;
+}
+@font-face {
+  font-family: SVN-Poppins;
+  src: url("./WOFF2/SVN-Poppins-ThinItalic.woff2");
+  font-style: italic;
+  font-weight: 100;
+}

@@ -12,7 +12,7 @@ export default defineConfig({
       },
       {
         find: "@Pub",
-        replacement: "/public",
+        replacement: "",
       },
     ],
   },
