@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ESNext",
+    "checkJs": false,
+    "baseUrl": ".",
+    "paths": {
+      "@Pub/*": ["./public/*"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": ["node_modules", "**/node_modules/*"]
+}
