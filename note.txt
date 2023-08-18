@@ -1,0 +1,16 @@
+các công việc cần làm
+
+user
+    Xem thông tin người đã đăng nhập
+
+tìm chuyến
+    có nút đặt vé
+
+đặt vé
+    chọn chỗ
+    cập nhật vé
+    có nút bấm thanh toán giả
+
+    có mục xem các vé đã đặt
+
+thêm feedback vé

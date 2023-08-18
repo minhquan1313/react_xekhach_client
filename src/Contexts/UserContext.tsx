@@ -1,6 +1,8 @@
 import { createContext, useState } from "react";
 
-const UserContext = createContext();
+const UserContext = createContext(null);
+
+interface IProps {}
 
 function UserProvider({ children }) {
   const [user, setUser] = useState(null);
