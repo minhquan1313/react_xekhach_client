@@ -43,7 +43,6 @@ interface IBookingContext {
   isLoading: boolean;
   bus?: IBus;
   trip?: ITrip;
-  preSelected: IBusSeatPos[];
   selectedId: IBusSeatPos[];
   updateBusSelectedSeat(x: IBusSeatPos[]): void;
   onNext(): void;
@@ -59,7 +58,6 @@ interface IBookingContext {
 }
 const BookingContext = createContext<IBookingContext>({
   isLoading: false,
-  preSelected: [],
   selectedId: [],
   totalPaid: 0,
   payment: "Tiền mặt",
@@ -104,8 +102,6 @@ function Booking() {
 
   const url = `/trips/?id=${tripIdParam}&getSeats&extraPrice`;
   const { data: tripDTO, isLoading } = useSWR<ITrip[]>(url, fetcher);
-  // preSelected?: IBusSeatPos[];
-  const { data: preSelected } = useSWR<IBusSeatPos[]>(null, fetcher);
 
   useEffect(() => {
     if (!user) {
@@ -133,14 +129,6 @@ function Booking() {
     });
     return newTicket;
   };
-
-  useEffect(() => {
-    console.log({ preSelected });
-
-    if (Array.isArray(preSelected)) {
-      setSelectedId((r) => [...r, ...preSelected]);
-    }
-  }, [preSelected]);
 
   useEffect(() => {
     if (!tripDTO) return;
@@ -195,7 +183,6 @@ function Booking() {
     isLoading,
     bus,
     trip,
-    preSelected: [],
     selectedId,
     updateBusSelectedSeat,
     onNext: () => setStep((r) => (r < stepsItems.length - 1 ? ++r : r)),
@@ -772,14 +759,8 @@ function NextBackBtn({
 }
 
 function BusSeatMapWrapped() {
-  const {
-    isLoading,
-    bus,
-    preSelected,
-    selectedId,
-    updateBusSelectedSeat,
-    step,
-  } = useContext(BookingContext);
+  const { isLoading, bus, selectedId, updateBusSelectedSeat, step } =
+    useContext(BookingContext);
 
   return (
     <Col xs={{ span: 24 }}>
@@ -790,7 +771,6 @@ function BusSeatMapWrapped() {
           {bus && bus.busSeats && (
             <BusSeatMap
               disabled={step !== 0}
-              preSelected={preSelected}
               selected={selectedId}
               busSeat={bus.busSeats}
               onChange={updateBusSelectedSeat}

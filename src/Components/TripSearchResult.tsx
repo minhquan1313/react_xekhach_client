@@ -1,57 +1,69 @@
-import MyButton from "@/Components/MyButton";
+import MyContainer from "@/Components/MyContainer";
 import { ITrip } from "@/Services/ITrip";
 import fetcher from "@/Services/fetcher";
 import { checkIfTime2HoursOkToBooking } from "@/Utils/checkIfTimeOk";
 import { dateFormat } from "@/Utils/customDate";
-import { Spin } from "antd";
+import { Card, Col, Spin } from "antd";
 import { memo } from "react";
+import { useNavigate } from "react-router-dom";
 import useSWR from "swr";
 
 interface IProps extends React.InputHTMLAttributes<HTMLInputElement> {
   url: string;
 }
 function TripSearchResult({ url }: IProps) {
-  const { data: tripDTO } = useSWR<ITrip[]>(url, fetcher);
+  const navigate = useNavigate();
+
+  const { data: tripDTO, isLoading } = useSWR<ITrip[]>(url, fetcher);
 
   return (
-    <div>
-      <p>Result</p>
-      {!tripDTO ? (
-        <Spin tip="Đang tải">
-          <div className="content" />
-        </Spin>
-      ) : (
-        <div>
-          <div>Sum: {tripDTO.length}</div>
-          {tripDTO.map((trip) => {
-            // let isTimeOk = true;
-            let isTimeOk = checkIfTime2HoursOkToBooking(trip.startAt);
+    <MyContainer>
+      <Spin spinning={isLoading}>
+        <div className="content" />
+        <MyContainer.Row>
+          <Col span={24}>Kết quả tìm kiếm</Col>
 
-            return (
-              isTimeOk && (
-                <div key={trip.id}>
-                  <div>ID: {trip.id}</div>
-                  <div>Giá: {trip.price.toLocaleString()}</div>
-                  <div>Khởi hành: {dateFormat(trip.startAt)}</div>
-                  <div>
-                    {trip.routeId.startLocation} {"->"}{" "}
-                    {trip.routeId.endLocation}
-                  </div>
-                  <div>{trip.busId.licensePlate}</div>
-                  {/* <div>{trip.busId.image}</div> */}
-                  <div>
-                    {trip.driverId.lastName} {trip.driverId.firstName}
-                  </div>
-                  {/* <div>{trip.driverId.avatar}</div> */}
-                  <MyButton to={`/booking/${trip.id}`}>Đặt vé</MyButton>
-                  <div className="">-=-=-=-=-=-=-=-=-=-=-=-=-=-=</div>
-                </div>
-              )
-            );
-          })}
-        </div>
-      )}
-    </div>
+          {tripDTO &&
+            tripDTO.map((trip) => {
+              // let isTimeOk = true;
+              const isTimeOk = checkIfTime2HoursOkToBooking(trip.startAt);
+
+              return (
+                isTimeOk && (
+                  <Col
+                    xs={{ span: 24 }}
+                    md={{ span: 24 / 2 }}
+                    xl={{ span: 24 / 3 }}
+                    xxl={{ span: 24 / 4 }}>
+                    <Card
+                      key={trip.id}
+                      title={`Mã chuyến: ${trip.id}`}
+                      hoverable
+                      onClick={() => {
+                        navigate({
+                          pathname: `/booking/${trip.id}`,
+                        });
+                      }}>
+                      <div>Khởi hành: {dateFormat(trip.startAt)}</div>
+                      <div>
+                        {trip.routeId.startLocation} {"->"}{" "}
+                        {trip.routeId.endLocation}
+                      </div>
+                      {/* <div>{trip.busId.licensePlate}</div>
+                      <div>
+                        {trip.driverId.lastName} {trip.driverId.firstName}
+                      </div> */}
+                      <div>Giá: {trip.price.toLocaleString()}d</div>
+                      {/* <div>{trip.driverId.avatar}</div> */}
+                      {/* <MyButton to={`/booking/${trip.id}`}>Đặt vé</MyButton> */}
+                    </Card>
+                  </Col>
+                )
+              );
+            })}
+        </MyContainer.Row>
+      </Spin>
+    </MyContainer>
   );
 }
 export function Trip({ ...rest }) {

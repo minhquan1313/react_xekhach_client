@@ -16,6 +16,7 @@ import {
   Row,
   Space,
   Spin,
+  Tooltip,
   message,
   theme,
 } from "antd";
@@ -218,21 +219,24 @@ function MyHeader() {
           {user ? (
             <Space>
               <Spin spinning={isUploading || isLogging || !isImagePreloaded}>
-                <Avatar
-                  size="large"
-                  src={user.avatar}
-                  icon={<UserOutlined />}
-                  onClick={() => {
-                    (() => {
-                      const input = document.createElement("input");
-                      input.type = "file";
+                <Tooltip title="Bấm để thay avatar">
+                  <Avatar
+                    size="large"
+                    src={user.avatar}
+                    icon={<UserOutlined />}
+                    onClick={() => {
+                      (() => {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = "image/*";
 
-                      input.onchange = () => imageUploadSubmit(input);
+                        input.onchange = () => imageUploadSubmit(input);
 
-                      input.click();
-                    })();
-                  }}
-                />
+                        input.click();
+                      })();
+                    }}
+                  />
+                </Tooltip>
               </Spin>
 
               <MyButton>

@@ -15,7 +15,7 @@ import {
 } from "@/Utils/checkIfTimeOk";
 import { dateFormat } from "@/Utils/customDate";
 import { myCreateSearchParams } from "@/Utils/serializeFormQuery";
-import { DownloadOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { QuestionCircleOutlined, SwapOutlined } from "@ant-design/icons";
 import {
   Card,
   Col,
@@ -358,7 +358,9 @@ function Ticket() {
           style={{ display: "flex" }}
           xs={{ span: 24 }}
           xxl={{ span: 24 - 16 }}>
-          <Card loading={isLoadingTicket}>
+          <Card
+            style={{ width: "100%" }}
+            loading={isLoadingTicket}>
             <MyContainer.Row>
               <Col span={24}>
                 <Popconfirm
@@ -405,7 +407,17 @@ function Ticket() {
                   loading={!feedbackDTO}
                   title="Đánh giá của bạn">
                   {feedbackDTO && feedbackDTO.length ? (
-                    <>{feedbackDTO[0].comment}</>
+                    <Typography.Text>{feedbackDTO[0].comment}</Typography.Text>
+                  ) : !ticket?.isPaid ? (
+                    <Typography.Text>
+                      Bạn cần{" "}
+                      <Typography.Text
+                        strong
+                        underline>
+                        thanh toán
+                      </Typography.Text>{" "}
+                      chuyến đi để có thể viết nhận xét
+                    </Typography.Text>
                   ) : (
                     <Form
                       layout="vertical"
@@ -545,9 +557,7 @@ function TicketInformation({
                       : "default"
                     : "default"
                 }
-                icon={
-                  tripToUpdate ? <DownloadOutlined /> : <DownloadOutlined />
-                }
+                icon={<SwapOutlined />}
               />
 
               {/* <MyButton icon={<DownOutlined />}></MyButton> */}
