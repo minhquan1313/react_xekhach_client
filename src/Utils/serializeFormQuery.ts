@@ -1,6 +1,7 @@
 import { createSearchParams } from "react-router-dom";
 
 // type TObject = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TObject = { [key: string]: any };
 export type TSerializeResult = { [key: string]: string };
 export default function serializeFormQuery(object: TObject): TSerializeResult {

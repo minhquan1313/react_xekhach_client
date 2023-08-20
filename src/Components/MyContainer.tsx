@@ -27,11 +27,13 @@ interface IRowProps extends RowProps {
 }
 function MyRow({ children, gutter, ...rest }: IRowProps) {
   return (
-    <Row
-      gutter={[20, 20]}
-      {...rest}>
-      {children}
-    </Row>
+    <div style={{ overflow: "hidden" }}>
+      <Row
+        gutter={gutter || [20, 20]}
+        {...rest}>
+        {children}
+      </Row>
+    </div>
   );
 }
 

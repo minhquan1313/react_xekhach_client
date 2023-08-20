@@ -30,7 +30,7 @@ function App() {
         />
         <Route
           path="booking/:tripId"
-          element={<Booking type="new" />}
+          element={<Booking />}
         />
         <Route
           path="tickets"

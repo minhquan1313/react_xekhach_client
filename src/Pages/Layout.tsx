@@ -1,19 +1,28 @@
 import MyButton from "@/Components/MyButton";
 import { UserContext } from "@/Contexts/UserContext";
+import { preloadImage } from "@/Utils/preloadImage";
 import {
-  AppstoreOutlined,
   BarChartOutlined,
-  CloudOutlined,
-  ShopOutlined,
-  TeamOutlined,
   UploadOutlined,
   UserOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
 import type { MenuProps, SiderProps } from "antd";
-import { Avatar, Col, Layout, Menu, Row, Space, theme } from "antd";
+import {
+  Avatar,
+  Col,
+  Layout,
+  Menu,
+  Row,
+  Space,
+  Spin,
+  message,
+  theme,
+} from "antd";
 import React, { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+
+const API = import.meta.env.VITE_API;
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -42,32 +51,12 @@ const siderObj = [
     label: "Vé của tôi",
     pathname: "/tickets",
   },
-  {
-    key: "6",
-    icon: CloudOutlined,
-    label: "5",
-  },
-  {
-    key: "7",
-    icon: AppstoreOutlined,
-    label: "6",
-  },
-  {
-    key: "8",
-    icon: TeamOutlined,
-    label: "7",
-  },
-  {
-    key: "9",
-    icon: ShopOutlined,
-    label: "8",
-  },
 ];
 
 function MyLayout() {
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
-  const [collapsed, setCollapsed] = useState((window as any).innerWidth < 900);
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 900);
   const [collapseClicked, setCollapseClicked] = useState(false);
 
   const onCollapse: SiderProps["onCollapse"] = (collapsed) => {
@@ -82,7 +71,7 @@ function MyLayout() {
       // console.log((window as any).innerWidth);
 
       if (!collapseClicked) {
-        if ((window as any).innerWidth < 900) {
+        if (window.innerWidth < 900) {
           setCollapsed(true);
         } else {
           setCollapsed(false);
@@ -111,9 +100,9 @@ function MyLayout() {
         : undefined,
     })
   );
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
+  // const {
+  //   token: { colorBgContainer },
+  // } = theme.useToken();
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -140,11 +129,13 @@ function MyLayout() {
       <Layout>
         <MyHeader />
         <Content
-          style={{
-            margin: "24px 16px 0",
-            // overflow: "initial",
-            background: colorBgContainer,
-          }}>
+          style={
+            {
+              // margin: "24px 16px 0",
+              // overflow: "initial",
+              // background: colorBgContainer,
+            }
+          }>
           <Outlet />
           {/* <div
             style={{
@@ -177,7 +168,45 @@ function MyHeader() {
   const {
     token: { colorBgContainer },
   } = theme.useToken();
-  const { user, isLogging, logout } = useContext(UserContext);
+  const { user, isLogging, logout, setUserAvatar } = useContext(UserContext);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isImagePreloaded, setIsImagePreloaded] = useState(true);
+
+  const imageUploadSubmit = async (e: HTMLInputElement): Promise<void> => {
+    const file = e.files?.[0];
+
+    if (!user || !file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("userId", user.id.toString());
+
+    setIsUploading(true);
+    setIsImagePreloaded(false);
+    const res = await fetch(`${API}/avatar/`, {
+      method: "POST",
+      body: formData,
+    });
+
+    console.log({ res });
+    const data = (await res.json()) as { url?: string };
+
+    const { url } = data;
+    console.log({ url });
+
+    if (url) {
+      message.success(`Tải ảnh thành công`);
+
+      preloadImage(url, () => {
+        setIsImagePreloaded(true);
+        setUserAvatar(url);
+      });
+    } else {
+      message.error(`Tải ảnh thất bại, thử lại sau`);
+    }
+
+    setIsUploading(false);
+  };
 
   return (
     <Header style={{ padding: 0, background: colorBgContainer }}>
@@ -188,11 +217,23 @@ function MyHeader() {
         <Col>
           {user ? (
             <Space>
-              <Avatar
-                size="default"
-                src={user.avatar}
-                icon={<UserOutlined />}
-              />
+              <Spin spinning={isUploading || isLogging || !isImagePreloaded}>
+                <Avatar
+                  size="large"
+                  src={user.avatar}
+                  icon={<UserOutlined />}
+                  onClick={() => {
+                    (() => {
+                      const input = document.createElement("input");
+                      input.type = "file";
+
+                      input.onchange = () => imageUploadSubmit(input);
+
+                      input.click();
+                    })();
+                  }}
+                />
+              </Spin>
 
               <MyButton>
                 {user.lastName} {user.firstName}
@@ -215,7 +256,7 @@ function MyFooter() {
   return (
     <div>
       <div>
-        <p>Footer</p>
+        <p>Xe khách Bình Hưng - Made by MTB@2023</p>
       </div>
     </div>
   );

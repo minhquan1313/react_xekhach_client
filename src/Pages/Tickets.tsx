@@ -21,7 +21,6 @@ function Tickets() {
     });
   const {
     data: ticketDTO,
-    mutate,
     isLoading,
     isValidating,
   } = useSWR<ITicket[]>(url, fetcher);
@@ -88,7 +87,6 @@ function TicketCard({ ticket }: ITicketProp) {
         {ticket.tripId.routeId.endLocation}
       </div>
       <div>{dateFormat(ticket.tripId.startAt)}</div>
-      {/* <div>{dateFormat(ticket.createdAt)}</div> */}
     </Card>
   );
 }

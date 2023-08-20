@@ -15,7 +15,7 @@ export function fetcherFake(ms: number) {
     });
   };
 }
-export const fetcherPost = (obj: Object) => async (url: string) => {
+export const fetcherPost = (obj: object) => async (url: string) => {
   const res = await fetch(API + url, {
     method: "POST",
     headers: {
@@ -28,7 +28,7 @@ export const fetcherPost = (obj: Object) => async (url: string) => {
 
   return data;
 };
-export const fetcherPatch = (obj: Object) => async (url: string) => {
+export const fetcherPatch = (obj: object) => async (url: string) => {
   const res = await fetch(API + url, {
     method: "PATCH",
     headers: {

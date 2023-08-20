@@ -9,11 +9,14 @@ interface IUserContext {
   login: (u: TUserLogin) => Promise<boolean>;
   register: (u: TUserRegister) => Promise<boolean>;
   logout: () => void;
+  refresh: () => void;
+  setUserAvatar: (url: string) => void;
 }
 
 const UserContext = createContext<IUserContext>({
   user: null,
   isLogging: false,
+  refresh() {},
   store() {},
   logout() {},
   login() {
@@ -22,6 +25,7 @@ const UserContext = createContext<IUserContext>({
   register() {
     return new Promise(() => {});
   },
+  setUserAvatar: function (): void {},
 });
 
 interface IProps {
@@ -60,9 +64,7 @@ function UserProvider({ children }: IProps) {
 
     setIsLogging(true);
 
-    let d: IUser[];
-
-    d = await fetcherPost(u)(url);
+    const d: IUser[] = await fetcherPost(u)(url);
 
     setIsLogging(false);
 
@@ -86,7 +88,9 @@ function UserProvider({ children }: IProps) {
         setUser(d[0]);
         return true;
       }
-    } catch (error) {}
+    } catch (error) {
+      /* empty */
+    }
 
     return false;
   };
@@ -114,6 +118,19 @@ function UserProvider({ children }: IProps) {
     })();
   }, [user]);
 
+  const refresh = () => {
+    const u = get();
+
+    if (u) login(u);
+  };
+
+  const setUserAvatar = function (url: string): void {
+    if (!user) return;
+
+    const { ...rest } = user;
+
+    setUser({ ...rest, avatar: url });
+  };
   const value: IUserContext = {
     user,
     isLogging,
@@ -121,6 +138,8 @@ function UserProvider({ children }: IProps) {
     login,
     logout,
     register,
+    refresh,
+    setUserAvatar,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

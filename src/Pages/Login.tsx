@@ -75,7 +75,7 @@ function Login() {
             name="basic"
             labelCol={{ xs: { span: 7 } }}
             wrapperCol={{ span: 20 }}
-            onChange={(e) => {
+            onChange={() => {
               setLoginFail(false);
             }}
             disabled={loading || isLogging}

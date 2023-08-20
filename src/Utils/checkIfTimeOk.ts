@@ -14,6 +14,13 @@ export function checkIfTime60MOkToUpdateTicket(time: number) {
 
   const condition: boolean = now.getTime() < earlier2HoursDate.getTime();
 
+  console.log(
+    "check 60",
+    { now, earlier2HoursDate },
+    now.getTime(),
+    earlier2HoursDate.getTime()
+  );
+
   return condition;
 }
 export function checkIfTimePassed(time: number) {

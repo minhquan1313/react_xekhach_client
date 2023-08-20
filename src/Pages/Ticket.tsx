@@ -2,7 +2,9 @@ import MyButton from "@/Components/MyButton";
 import MyContainer from "@/Components/MyContainer";
 import { UserContext } from "@/Contexts/UserContext";
 import { BusSeatMap } from "@/Pages/Booking";
+import { FeedbackService } from "@/Services/FeedbackService";
 import { IBusSeat, IBusSeatPos } from "@/Services/IBus";
+import { IFeedback } from "@/Services/IFeedback";
 import { ITicket } from "@/Services/ITicket";
 import { ITrip } from "@/Services/ITrip";
 import { TicketService } from "@/Services/TicketService";
@@ -19,6 +21,8 @@ import {
   Col,
   Descriptions,
   Dropdown,
+  Form,
+  Input,
   Popconfirm,
   Progress,
   Skeleton,
@@ -29,6 +33,10 @@ import {
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useSWR from "swr";
+
+type FeedbackFieldType = {
+  comment: string;
+};
 
 function Ticket() {
   const { user } = useContext(UserContext);
@@ -43,6 +51,8 @@ function Ticket() {
       totalSeat: true,
       busSeat: true,
     });
+
+  // const [feedbackUrl, setFeedbackUrl] = useState<string>();
   const [sameTripUrl, setSameTripUrl] = useState<string>();
 
   const [ticket, setTicket] = useState<ITicket>();
@@ -50,32 +60,40 @@ function Ticket() {
   const [tripHasSameRoute, setTripHasSameRoute] = useState<ITrip[]>([]);
   const [selected, setSelected] = useState<IBusSeatPos[]>([]);
   const [preSelected, setPreSelected] = useState<IBusSeatPos[]>([]);
-  //   const [seatCountAvailableToSelect, setSeatCountAvailableToSelect] =
-  //     useState(0);
+  const [busSeat, setBusSeat] = useState<IBusSeat>();
+
+  const [isCreatingFeedbackToServer, setIsCreatingFeedbackToServer] =
+    useState(false);
+
   const [isChangingToServer, setIsChangingToServer] = useState(false);
-  //   const [isChanged, setIsChanged] = useState(false);
+  const [seatLoading, setSeatLoading] = useState(false);
   const [readyToUpdateSeat, setReadyToUpdateSeat] = useState(false);
   const [isSeatUpdateSuccess, setIsSeatUpdateSuccess] = useState<boolean>();
-  const [busSeat, setBusSeat] = useState<IBusSeat>();
-  //   const [isSeatUpdated, setIsSeatUpdated] = useState(false);
-  //   const [isChangeTrip, setIsChangeTrip] = useState(false);
   const [allowUpdate, setAllowUpdate] = useState(true);
+
   const [cantUpdateMsg, setCantUpdateMsg] = useState("");
 
   const {
     data: ticketDTO,
-    mutate,
-    isLoading,
-    isValidating,
+    mutate: mutateTicket,
+    isLoading: isLoadingTicket,
+    isValidating: isValidatingTicket,
   } = useSWR<ITicket[]>(user ? url : null, fetcher);
+
   const {
     data: sameTripDTO,
-    // mutate,
-    // isLoading,
-    // isValidating,
+    mutate: mutateSameTrip,
     isValidating: isSameTripLoading,
   } = useSWR<ITrip[]>(sameTripUrl, fetcher);
 
+  const { data: feedbackDTO, mutate: mutateFeedback } = useSWR<IFeedback[]>(
+    `/feedbacks/?` +
+      myCreateSearchParams({
+        ticketId: ticketIdParam,
+      }),
+    fetcher
+  );
+  // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
   useEffect(() => {
     if (!user) {
       navigate({
@@ -83,6 +101,11 @@ function Ticket() {
       });
     }
   }, [user]);
+
+  // useEffect(() => {
+  //   console.log({ feedbackUrl });
+  //   console.log({ feedBackDTO: feedbackDTO });
+  // }, [feedbackDTO]);
 
   useEffect(() => {
     console.log({ ticketDTO, url });
@@ -107,23 +130,26 @@ function Ticket() {
     if (t.isPaid) {
       setCantUpdateMsg("Không thể cập nhật vì đã thanh toán");
     }
-    if (condition) {
+    if (!condition) {
       setCantUpdateMsg("Không thể cập nhật vì chuyến sắp chạy");
     }
     if (condition1) {
       setCantUpdateMsg("Chuyến trong quá khứ");
     }
   }, [ticketDTO]);
+
   useEffect(() => {
     console.log({ sameTripDTO, sameTripUrl });
     if (!sameTripDTO) return;
 
     setTripHasSameRoute(
-      sameTripDTO.filter((r) => {
+      sameTripDTO.filter(() => {
         // let isOk = checkIfTime60MOkToUpdateTicket(r.startAt);
-        let isOk = true;
+        // let isOk = true;
 
-        return r.id !== ticket?.tripId.id && isOk;
+        //   const condition = r.id !== ticket?.tripId.id && isOk;
+
+        return true;
       })
     );
   }, [sameTripDTO]);
@@ -134,8 +160,8 @@ function Ticket() {
 
     const selectedIds = selected.map((r) => r.id);
 
-    let isChanged = !!preSelected.find((r) => !selectedIds.includes(r.id));
-    let isLengthMatch = preSelected.length === selected.length;
+    const isChanged = !!preSelected.find((r) => !selectedIds.includes(r.id));
+    const isLengthMatch = preSelected.length === selected.length;
 
     // console.log({ isChanged }, isLengthMatch, isChanged && isLengthMatch);
     setReadyToUpdateSeat(isChanged && isLengthMatch);
@@ -156,6 +182,13 @@ function Ticket() {
           getSeats: true,
         })
     );
+
+    // setFeedbackUrl(
+    //   `/feedbacks/?` +
+    //     myCreateSearchParams({
+    //       ticketId: ticket.id,
+    //     })
+    // );
   }, [ticket]);
 
   useEffect(() => {
@@ -167,41 +200,58 @@ function Ticket() {
   }
 
   async function tripChange(trip: ITrip) {
+    if (trip.id === ticket?.tripId.id) {
+      setTripToUpdate(undefined);
+
+      setBusSeat(ticket.tripId.busId.busSeats);
+      setSelected(preSelected);
+
+      return;
+    }
+
     console.log({ trip });
+
     const url =
       `/trips/?` +
       myCreateSearchParams({
         id: trip.id,
         getSeats: true,
       });
-    setIsChangingToServer(true);
-    const data = (await fetcher(url)) as ITrip[];
-    setIsChangingToServer(false);
-    const [t] = data;
-    if (t) {
-      setTripToUpdate(t);
-      setBusSeat(t.busId.busSeats);
-      setSelected([]);
+    setSeatLoading(true);
+
+    if (trip.id !== tripToUpdate?.id) {
+      const data: ITrip[] = await fetcher(url);
+
+      const [t] = data;
+      if (t) {
+        setTripToUpdate(t);
+        setBusSeat(t.busId.busSeats);
+        setSelected([]);
+      }
+
+      console.log({ data });
     }
 
-    console.log({ t: data });
-
-    //   setTripToUpdate
+    setSeatLoading(false);
   }
 
   async function changeTripSubmit() {
+    if (!tripToUpdate) return;
+
     setIsChangingToServer(true);
 
-    const isOk = await TicketService.editSeat({
+    const isOk = await TicketService.editTripAndSeat({
       selectedSeats: selected,
       id: ticket!.id,
+      tripId: tripToUpdate.id,
     });
 
     setIsChangingToServer(false);
     setIsSeatUpdateSuccess(isOk);
 
     if (isOk) {
-      mutate();
+      mutateTicket();
+      mutateSameTrip();
     }
 
     console.log({ isOk });
@@ -218,10 +268,27 @@ function Ticket() {
     setIsSeatUpdateSuccess(isOk);
 
     if (isOk) {
-      mutate();
+      mutateTicket();
       //   reset
     }
 
+    console.log({ isOk });
+  }
+
+  async function addFeedbackSubmit({ comment }: FeedbackFieldType) {
+    if (!ticket) return;
+
+    setIsCreatingFeedbackToServer(true);
+
+    const isOk = await FeedbackService.new({
+      comment,
+      ticketId: ticket?.id,
+    });
+    setIsCreatingFeedbackToServer(false);
+
+    if (isOk) {
+      mutateFeedback();
+    }
     console.log({ isOk });
   }
 
@@ -239,9 +306,10 @@ function Ticket() {
   return (
     <MyContainer>
       <MyContainer.Row justify={"center"}>
+        {/* Ticket info */}
         <Col xs={{ span: 24 }}>
           <Card>
-            {isLoading ? (
+            {isLoadingTicket ? (
               <Skeleton active />
             ) : ticket ? (
               <TicketInformation
@@ -257,8 +325,40 @@ function Ticket() {
             )}
           </Card>
         </Col>
-        <Col xs={{ span: 24 }}>
-          <Card>
+
+        {/* busSeatMap */}
+        <Col
+          style={{ display: "flex" }}
+          xs={{ span: 24 }}
+          xxl={{ span: 16 }}>
+          <Card style={{ width: "100%" }}>
+            {ticket && (
+              <Spin spinning={isValidatingTicket || seatLoading}>
+                {busSeat && (
+                  <BusSeatMap
+                    disabled={
+                      !allowUpdate
+                        ? true
+                        : isSeatUpdateSuccess ||
+                          isChangingToServer ||
+                          seatLoading
+                    }
+                    busSeat={busSeat}
+                    onChange={onSeatChangeHandle}
+                    preSelected={preSelected}
+                    selected={selected}
+                  />
+                )}
+              </Spin>
+            )}
+          </Card>
+        </Col>
+
+        <Col
+          style={{ display: "flex" }}
+          xs={{ span: 24 }}
+          xxl={{ span: 24 - 16 }}>
+          <Card loading={isLoadingTicket}>
             <MyContainer.Row>
               <Col span={24}>
                 <Popconfirm
@@ -268,7 +368,6 @@ function Ticket() {
                     if (!tripToUpdate) changeSeatSubmit();
                     else changeTripSubmit();
                   }}
-                  //   open={!readyToUpdateSeat ? false : true}
                   icon={<QuestionCircleOutlined />}
                   okText="Xác nhận"
                   cancelText="Huỷ">
@@ -283,7 +382,9 @@ function Ticket() {
                       ? "Thành công"
                       : isSeatUpdateSuccess == false
                       ? "Thất bại"
-                      : "Có thể cập nhật"}
+                      : //   : isValidating
+                        //   ? "~~~"
+                        "Có thể cập nhật"}
                   </MyButton>
                 </Popconfirm>
               </Col>
@@ -298,30 +399,79 @@ function Ticket() {
                   />
                 </Card>
               </Col>
+
+              <Col span={24}>
+                <Card
+                  loading={!feedbackDTO}
+                  title="Đánh giá của bạn">
+                  {feedbackDTO && feedbackDTO.length ? (
+                    <>{feedbackDTO[0].comment}</>
+                  ) : (
+                    <Form
+                      layout="vertical"
+                      onFinish={addFeedbackSubmit}
+                      autoComplete="off">
+                      <Form.Item<FeedbackFieldType>
+                        name="comment"
+                        label="Nội dung đánh giá"
+                        rules={[
+                          { required: true, message: "Hãy điền gì đó nhé" },
+                        ]}>
+                        <Input.TextArea
+                          rows={4}
+                          placeholder="Điền đánh giá"
+                        />
+                      </Form.Item>
+                      <Form.Item>
+                        <MyButton
+                          loading={isCreatingFeedbackToServer}
+                          type="primary"
+                          htmlType="submit">
+                          Đánh giá
+                        </MyButton>
+                      </Form.Item>
+                    </Form>
+                  )}
+                </Card>
+              </Col>
             </MyContainer.Row>
           </Card>
         </Col>
-        <Col xs={{ span: 24 }}>
-          <Card>
-            {ticket && (
-              <Spin spinning={isValidating}>
-                {busSeat && (
-                  <BusSeatMap
-                    disabled={
-                      !allowUpdate
-                        ? true
-                        : isSeatUpdateSuccess || isChangingToServer
-                    }
-                    busSeat={busSeat}
-                    onChange={onSeatChangeHandle}
-                    preSelected={preSelected}
-                    selected={selected}
+
+        {/* <Col
+          xs={{ span: 24 }}
+          lg={{ span: 12 }}>
+          <Card
+            loading={!feedbackDTO}
+            title="Đánh giá của bạn">
+            {feedbackDTO && feedbackDTO.length ? (
+              <>{feedbackDTO[0].comment}</>
+            ) : (
+              <Form
+                layout="vertical"
+                onFinish={addFeedbackSubmit}
+                autoComplete="off">
+                <Form.Item<FeedbackFieldType>
+                  name="comment"
+                  label="Nội dung đánh giá"
+                  rules={[{ required: true, message: "Hãy điền gì đó nhé" }]}>
+                  <Input.TextArea
+                    rows={4}
+                    placeholder="Điền đánh giá"
                   />
-                )}
-              </Spin>
+                </Form.Item>
+                <Form.Item>
+                  <MyButton
+                    loading={isCreatingFeedbackToServer}
+                    type="primary"
+                    htmlType="submit">
+                    Đánh giá
+                  </MyButton>
+                </Form.Item>
+              </Form>
             )}
           </Card>
-        </Col>
+        </Col> */}
       </MyContainer.Row>
     </MyContainer>
   );
@@ -362,6 +512,8 @@ function TicketInformation({
                       disabled: !checkIfTime60MOkToUpdateTicket(r.startAt),
                       label: (
                         <Typography.Text
+                          strong={r.id === ticket.tripId.id}
+                          italic={r.id === ticket.tripId.id}
                           disabled={!checkIfTime60MOkToUpdateTicket(r.startAt)}>
                           {dateFormat(r.startAt)}
                         </Typography.Text>
@@ -381,6 +533,7 @@ function TicketInformation({
                       },
                     ],
               }}>
+              {/* Change trip btn */}
               <MyButton
                 size="small"
                 shape="circle"

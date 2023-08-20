@@ -39,10 +39,6 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import useSWR from "swr";
 
-interface IProps {
-  type: "new" | "update";
-}
-
 interface IBookingContext {
   isLoading: boolean;
   bus?: IBus;
@@ -91,7 +87,7 @@ const stepsItems = [
     title: "Đặt vé hoàn tất",
   },
 ];
-function Booking({ type }: IProps) {
+function Booking() {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const { tripId: tripIdParam } = useParams();
@@ -109,10 +105,7 @@ function Booking({ type }: IProps) {
   const url = `/trips/?id=${tripIdParam}&getSeats&extraPrice`;
   const { data: tripDTO, isLoading } = useSWR<ITrip[]>(url, fetcher);
   // preSelected?: IBusSeatPos[];
-  const { data: preSelected, isLoading: _isLoading } = useSWR<IBusSeatPos[]>(
-    null,
-    fetcher
-  );
+  const { data: preSelected } = useSWR<IBusSeatPos[]>(null, fetcher);
 
   useEffect(() => {
     if (!user) {
@@ -393,8 +386,9 @@ function Step2() {
                     Hãy quét mã để thanh toán
                   </p>
                   <Image
-                    width={300}
+                    width={"100%"}
                     src={momo}
+                    style={{ maxWidth: 300 }}
                   />
                 </Col>
 
@@ -429,7 +423,8 @@ function Step2() {
                     Hãy quét mã để thanh toán
                   </p>
                   <Image
-                    width={300}
+                    width={"100%"}
+                    style={{ maxWidth: 300 }}
                     src={bank}
                   />
                 </Col>
@@ -810,7 +805,7 @@ function ContentWrapper({ children }: { children: ReactNode }) {
   return <Col xs={{ span: 24 }}>{children}</Col>;
 }
 function parseSeatName(pos: IBusSeatPos) {
-  let s = String.fromCharCode(pos.x + 65 - 1) + pos.y;
+  const s = String.fromCharCode(pos.x + 65 - 1) + pos.y;
 
   return s;
 }

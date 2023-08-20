@@ -49,7 +49,6 @@ export const TicketService = {
   }: Pick<ITicketDTO, "selectedSeats" | "id">): Promise<boolean> => {
     const obj = {
       selectedSeats: parseSelectedSeat(selectedSeats),
-      // userId,
       id,
     };
     const api = "/booking/edit/";
@@ -69,31 +68,33 @@ export const TicketService = {
 
     return true;
   },
-  // getTicketsOfUser: async (userId: number) => {
-  //   let result: ITicket[] | undefined;
-  //   const url =
-  //     `/tickets/?` +
-  //     myCreateSearchParams({
-  //       userId,
-  //     });
+  editTripAndSeat: async ({
+    selectedSeats,
+    id,
+    tripId,
+  }: Pick<ITicketDTO, "selectedSeats" | "id" | "tripId">): Promise<boolean> => {
+    const obj = {
+      selectedSeats: parseSelectedSeat(selectedSeats),
+      id,
+      tripId,
+    };
+    const api = "/booking/edit/";
 
-  //   console.log({ url });
+    console.log({ obj });
 
-  //   // try {
-  //   //   result = await fetcherPost(obj)("/tickets/");
-  //   // } catch (error) {
-  //   //   return false;
-  //   // }
-  //   // console.log(result);
+    let result;
+    try {
+      result = await fetcherPatch(obj)(api);
+    } catch (error) {
+      console.log({ error });
+      console.trace();
+      return false;
+    }
 
-  //   // if (result) {
-  //   //   const [ticket] = result;
+    console.log({ result });
 
-  //   //   if (ticket) return true;
-  //   // }
-
-  //   return false;
-  // },
+    return true;
+  },
 };
 
 const parseSelectedSeat = (selectedSeats: IBusSeatPos[]) => {

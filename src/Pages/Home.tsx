@@ -4,7 +4,14 @@ import { Typography } from "antd";
 function Home() {
   return (
     <div>
-      <Typography.Text>Home page</Typography.Text>
+      <Typography.Title
+        level={2}
+        style={{ textAlign: "center", paddingTop: 20 }}>
+        Chào mừng bạn
+      </Typography.Title>
+      <Typography.Paragraph style={{ textAlign: "center" }}>
+        Tìm và đặt chuyến ngay thoi!
+      </Typography.Paragraph>
 
       <TripSearch />
     </div>
