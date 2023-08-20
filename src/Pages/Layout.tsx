@@ -1,4 +1,5 @@
 import MyButton from "@/Components/MyButton";
+import { UserContext } from "@/Contexts/UserContext";
 import {
   AppstoreOutlined,
   BarChartOutlined,
@@ -10,8 +11,8 @@ import {
   VideoCameraOutlined,
 } from "@ant-design/icons";
 import type { MenuProps, SiderProps } from "antd";
-import { Layout, Menu, theme } from "antd";
-import React, { useState } from "react";
+import { Avatar, Col, Layout, Menu, Row, Space, theme } from "antd";
+import React, { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -30,32 +31,34 @@ const siderObj = [
     pathname: "/trips",
   },
   {
-    key: 4,
+    key: "/booking",
     icon: UploadOutlined,
-    label: "3",
+    label: "Đặt vé",
+    pathname: "/booking",
   },
   {
-    key: 5,
+    key: "/tickets",
     icon: BarChartOutlined,
-    label: "4",
+    label: "Vé của tôi",
+    pathname: "/tickets",
   },
   {
-    key: 6,
+    key: "6",
     icon: CloudOutlined,
     label: "5",
   },
   {
-    key: 7,
+    key: "7",
     icon: AppstoreOutlined,
     label: "6",
   },
   {
-    key: 8,
+    key: "8",
     icon: TeamOutlined,
     label: "7",
   },
   {
-    key: 9,
+    key: "9",
     icon: ShopOutlined,
     label: "8",
   },
@@ -64,12 +67,35 @@ const siderObj = [
 function MyLayout() {
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState((window as any).innerWidth < 900);
+  const [collapseClicked, setCollapseClicked] = useState(false);
 
   const onCollapse: SiderProps["onCollapse"] = (collapsed) => {
     console.log(collapsed);
     setCollapsed(collapsed);
+
+    setCollapseClicked(true);
   };
+
+  useEffect(() => {
+    const f = () => {
+      // console.log((window as any).innerWidth);
+
+      if (!collapseClicked) {
+        if ((window as any).innerWidth < 900) {
+          setCollapsed(true);
+        } else {
+          setCollapsed(false);
+        }
+      }
+    };
+
+    window.addEventListener("resize", f);
+
+    return () => {
+      window.removeEventListener("resize", f);
+    };
+  }, [collapseClicked]);
 
   const siderItems: MenuProps["items"] = siderObj.map(
     ({ icon, label, pathname, key }) => ({
@@ -93,6 +119,7 @@ function MyLayout() {
     <Layout style={{ minHeight: "100vh" }}>
       <Sider
         collapsible
+        // theme="light"
         collapsed={collapsed}
         onCollapse={onCollapse}>
         <div className="demo-logo-vertical" />
@@ -100,7 +127,13 @@ function MyLayout() {
           theme="dark"
           mode="inline"
           defaultSelectedKeys={["/"]}
-          selectedKeys={[pathname]}
+          selectedKeys={siderObj
+            .map((x) => x.key)
+            .filter((x) => {
+              if (x == "/") return pathname == x;
+
+              return pathname.startsWith(x);
+            })}
           items={siderItems}
         />
       </Sider>
@@ -144,15 +177,37 @@ function MyHeader() {
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+  const { user, isLogging, logout } = useContext(UserContext);
 
   return (
     <Header style={{ padding: 0, background: colorBgContainer }}>
-      <MyButton
-        to="/"
-        display="inline">
-        Bình Hưng
-      </MyButton>
-      <MyButton to="/login">Login</MyButton>
+      <Row
+        justify={"space-between"}
+        style={{ padding: "0 12px" }}>
+        <Col></Col>
+        <Col>
+          {user ? (
+            <Space>
+              <Avatar
+                size="default"
+                src={user.avatar}
+                icon={<UserOutlined />}
+              />
+
+              <MyButton>
+                {user.lastName} {user.firstName}
+              </MyButton>
+              <MyButton onClick={logout}>Đăng xuất</MyButton>
+            </Space>
+          ) : (
+            <MyButton
+              loading={isLogging}
+              to="/login">
+              {isLogging ? "Đang đăng nhập" : "Đăng nhập"}
+            </MyButton>
+          )}
+        </Col>
+      </Row>
     </Header>
   );
 }

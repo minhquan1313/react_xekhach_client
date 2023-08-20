@@ -18,7 +18,9 @@ export interface ITrip {
   id: number;
   startAt: number;
   price: number;
+  extraPrice?: number;
   busId: IBus;
   routeId: IRoute;
   driverId: IUser;
 }
+export type TPaymentMethod = "Tiền mặt" | "Momo" | "Chuyển khoản";

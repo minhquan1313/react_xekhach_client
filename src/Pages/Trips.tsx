@@ -1,14 +1,11 @@
 import TripSearch from "@/Components/TripSearch";
 import TripSearchResult from "@/Components/TripSearchResult";
-import { ApiContext } from "@/Contexts/ApiContext";
 import { ITripSearch } from "@/Services/ITrip";
 import { myCreateSearchParams } from "@/Utils/serializeFormQuery";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 function Trips() {
-  const api = useContext(ApiContext);
-
   const [queries, setQueries] = useSearchParams();
 
   const [url, setUrl] = useState(getUrlFirstTime());
@@ -24,11 +21,11 @@ function Trips() {
       timeTo: eTime ? parseInt(eTime) : undefined,
     };
 
-    return `${api}/trips/?${myCreateSearchParams(obj)}`;
+    return `/trips/?${myCreateSearchParams(obj)}`;
   }
 
   function getUrl(query: URLSearchParams) {
-    const url = `${api}/trips/?${query}`;
+    const url = `/trips/?${query}`;
     console.log({ urlTrip: url });
 
     return url;

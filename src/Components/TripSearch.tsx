@@ -1,13 +1,23 @@
 import MyButton from "@/Components/MyButton";
+import { IRoute } from "@/Services/IRoute";
 import { ITripSearch } from "@/Services/ITrip";
+import fetcher from "@/Services/fetcher";
+import { autoCompleteFilter } from "@/Utils/autoCompleteFilter";
 import { dateParse, pattern_no_second, toDayJs } from "@/Utils/customDate";
 import { myCreateSearchParams } from "@/Utils/serializeFormQuery";
-import { Col, DatePicker, Form, Input, Row } from "antd";
+import { CloseSquareFilled } from "@ant-design/icons";
+import { AutoComplete, Col, DatePicker, Form, Row } from "antd";
 import locale from "antd/es/date-picker/locale/vi_VN";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import useSWR from "swr";
 
+type TFieldType = {
+  startLocation?: string;
+  endLocation?: string;
+  rangeTime?: [dayjs.Dayjs, dayjs.Dayjs];
+};
 interface IProps {
   onSearchParamChange?: (query: URLSearchParams) => void;
 }
@@ -17,9 +27,11 @@ function TripSearch({ onSearchParamChange }: IProps) {
   const [q] = useSearchParams();
 
   const [startLocation, setStartLocation] = useState(
-    q.get("startLocation") || ""
+    q.get("startLocation") || undefined
   );
-  const [endLocation, setEndLocation] = useState(q.get("endLocation") || "");
+  const [endLocation, setEndLocation] = useState(
+    q.get("endLocation") || undefined
+  );
   const sTime = q.get("timeFrom");
   const [startTime, setStartTime] = useState(
     sTime ? parseInt(sTime) : undefined
@@ -38,11 +50,7 @@ function TripSearch({ onSearchParamChange }: IProps) {
     }
   };
 
-  const onFinish = (values: {
-    startLocation: string;
-    endLocation: string;
-    rangeTime: [dayjs.Dayjs, dayjs.Dayjs] | undefined;
-  }) => {
+  const onFinish = (values: TFieldType) => {
     const { startLocation, endLocation, rangeTime } = values;
 
     setStartLocation(startLocation);
@@ -67,9 +75,28 @@ function TripSearch({ onSearchParamChange }: IProps) {
     goToTrips(query);
   };
 
+  const urlStart = `/routes/start-location/`;
+  const urlEnd = `/routes/end-location/`;
+  const urlRoutes = `/routes/`;
+  const { data: dataRoute } = useSWR<IRoute[]>(urlRoutes, fetcher);
+
+  const [optionStarts, setOptionStarts] = useState<{ value: string }[]>([]);
+  const [optionEnds, setOptionEnds] = useState<{ value: string }[]>([]);
+
   useEffect(() => {
-    console.log({ endTime, startTime });
-  });
+    if (!dataRoute) return;
+    console.log({ dataRoute });
+
+    const starts = [
+      ...new Set(dataRoute.map(({ startLocation }) => startLocation)),
+    ].map((r) => ({ value: r }));
+    setOptionStarts(starts);
+
+    const ends = [
+      ...new Set(dataRoute.map(({ endLocation }) => endLocation)),
+    ].map((r) => ({ value: r }));
+    setOptionEnds(ends);
+  }, [dataRoute]);
 
   return (
     <Row>
@@ -114,19 +141,67 @@ function TripSearch({ onSearchParamChange }: IProps) {
           }}
           onFinish={onFinish}
           autoComplete="off">
-          <Form.Item
+          <Form.Item<TFieldType>
             label="startLocation"
             name="startLocation">
-            <Input />
+            <AutoComplete
+              options={optionStarts}
+              allowClear={{ clearIcon: <CloseSquareFilled /> }}
+              // onChange={() => {
+              //   if (!dataRoute) return;
+              //   const ends = [
+              //     ...new Set(dataRoute.map(({ endLocation }) => endLocation)),
+              //   ].map((r) => ({ value: r }));
+              //   setOptionEnds(ends);
+              // }}
+              // onSelect={(startLocation) => {
+              //   if (!dataRoute) return;
+              //   const ends = [
+              //     ...new Set(
+              //       dataRoute
+              //         .filter((r) => r.startLocation === startLocation)
+              //         .map(({ endLocation }) => endLocation)
+              //     ),
+              //   ].map((r) => ({ value: r }));
+
+              //   setOptionEnds(ends);
+              // }}
+              filterOption={autoCompleteFilter}
+            />
           </Form.Item>
 
-          <Form.Item
+          <Form.Item<TFieldType>
             label="endLocation"
             name="endLocation">
-            <Input />
+            <AutoComplete
+              options={optionEnds}
+              allowClear={{ clearIcon: <CloseSquareFilled /> }}
+              // onChange={() => {
+              //   if (!dataRoute) return;
+              //   const starts = [
+              //     ...new Set(
+              //       dataRoute.map(({ startLocation }) => startLocation)
+              //     ),
+              //   ].map((r) => ({ value: r }));
+              //   setOptionStarts(starts);
+              // }}
+              // onSelect={(endLocation) => {
+              //   if (!dataRoute) return;
+              //   const starts = [
+              //     ...new Set(
+              //       dataRoute
+              //         .filter((r) => r.endLocation === endLocation)
+              //         .map(({ startLocation }) => startLocation)
+              //     ),
+              //   ].map((r) => ({ value: r }));
+
+              //   setOptionStarts(starts);
+              // }}
+              filterOption={autoCompleteFilter}
+            />
           </Form.Item>
 
-          <Form.Item
+          <Form.Item<TFieldType>
             label="rangeTime"
             name="rangeTime">
             <DatePicker.RangePicker
@@ -141,7 +216,7 @@ function TripSearch({ onSearchParamChange }: IProps) {
             />
           </Form.Item>
 
-          <Form.Item
+          <Form.Item<TFieldType>
             wrapperCol={{
               offset: 8,
               span: 16,

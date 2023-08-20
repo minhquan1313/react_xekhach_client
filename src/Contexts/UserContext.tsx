@@ -1,17 +1,129 @@
-import { createContext, useState } from "react";
+import { IUser } from "@/Services/IUser";
+import { fetcherPost } from "@/Services/fetcher";
+import { ReactNode, createContext, useEffect, useState } from "react";
 
-const UserContext = createContext(null);
+interface IUserContext {
+  user: IUser | null;
+  isLogging: boolean;
+  store: (u: TUserLogin) => void;
+  login: (u: TUserLogin) => Promise<boolean>;
+  register: (u: TUserRegister) => Promise<boolean>;
+  logout: () => void;
+}
 
-interface IProps {}
+const UserContext = createContext<IUserContext>({
+  user: null,
+  isLogging: false,
+  store() {},
+  logout() {},
+  login() {
+    return new Promise(() => {});
+  },
+  register() {
+    return new Promise(() => {});
+  },
+});
 
-function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
+interface IProps {
+  children: ReactNode;
+}
+export type TUserLogin = Pick<IUser, "username" | "password">;
+export type TUserRegister = Pick<IUser, "username" | "password" | "firstName">;
 
-  return (
-    <UserContext.Provider value={{ user, setUser }}>
-      {children}
-    </UserContext.Provider>
-  );
+function UserProvider({ children }: IProps) {
+  const [user, setUser] = useState<IUser | null>(null);
+  const [isLogging, setIsLogging] = useState(false);
+
+  const clear = () => {
+    console.log(`CLEAR`);
+
+    localStorage.removeItem("user.username");
+    localStorage.removeItem("user.password");
+  };
+  const store = (u: TUserLogin) => {
+    localStorage.setItem("user.username", u.username);
+    localStorage.setItem("user.password", u.password);
+  };
+  const get = () => {
+    const username = localStorage.getItem("user.username");
+    const password = localStorage.getItem("user.password");
+
+    if (username && password) {
+      const u: TUserLogin = { username, password };
+      return u;
+    }
+    return null;
+  };
+
+  const login = async (u: TUserLogin) => {
+    const url = `/login/`;
+
+    setIsLogging(true);
+
+    let d: IUser[];
+
+    d = await fetcherPost(u)(url);
+
+    setIsLogging(false);
+
+    console.log({ d });
+
+    if (d && d[0]) {
+      setUser(d[0]);
+      return true;
+    }
+
+    return false;
+  };
+  const register = async (u: TUserRegister) => {
+    const url = `/register/`;
+    try {
+      const d: IUser[] = await fetcherPost(u)(url);
+
+      console.log({ d });
+
+      if (d[0]) {
+        setUser(d[0]);
+        return true;
+      }
+    } catch (error) {}
+
+    return false;
+  };
+  const logout = () => {
+    if (!user) return;
+
+    clear();
+    setUser(null);
+  };
+
+  // auto login
+  useEffect(() => {
+    if (user) return;
+
+    const u = get();
+
+    if (!u) return;
+
+    (async () => {
+      const logged = await login(u);
+
+      if (!logged) {
+        clear();
+      }
+    })();
+  }, [user]);
+
+  const value: IUserContext = {
+    user,
+    isLogging,
+    store,
+    login,
+    logout,
+    register,
+  };
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
 export { UserContext, UserProvider };

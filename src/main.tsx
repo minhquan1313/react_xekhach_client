@@ -1,5 +1,4 @@
 import App from "@/App";
-import { ApiProvider } from "@/Contexts/ApiContext";
 import { UserProvider } from "@/Contexts/UserContext";
 import "@/Styles/index.css";
 import { ConfigProvider, theme } from "antd";
@@ -12,17 +11,15 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <UserProvider>
-        <ApiProvider>
-          <ConfigProvider
-            theme={{
-              algorithm: theme.darkAlgorithm,
-              token: {
-                fontFamily: "SVN-Poppins",
-              },
-            }}>
-            <App />
-          </ConfigProvider>
-        </ApiProvider>
+        <ConfigProvider
+          theme={{
+            algorithm: theme.darkAlgorithm,
+            token: {
+              fontFamily: "SVN-Poppins",
+            },
+          }}>
+          <App />
+        </ConfigProvider>
       </UserProvider>
     </BrowserRouter>
   </React.StrictMode>

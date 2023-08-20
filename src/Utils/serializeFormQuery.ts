@@ -14,9 +14,11 @@ export default function serializeFormQuery(object: TObject): TSerializeResult {
       result[key] = v.getTime().toString();
     } else if (typeof v === "number") {
       result[key] = v.toString();
+    } else if (typeof v === "boolean") {
+      result[key] = v.toString();
     }
   }
-  console.log({ object, result });
+  // console.log({ object, result });
 
   return result;
 }

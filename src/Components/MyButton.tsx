@@ -1,5 +1,5 @@
 import { Button, ButtonProps } from "antd";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface IProps extends ButtonProps {
   to?: string;
@@ -7,9 +7,8 @@ interface IProps extends ButtonProps {
   display?: "inline";
 }
 function MyButton({
-  type = "primary",
   to = "",
-  disabled,
+  type = "default",
   onClick,
 
   children,
@@ -19,7 +18,10 @@ function MyButton({
 
   return (
     <Button
-      type="primary"
+      type={type}
+      style={{
+        position: "relative",
+      }}
       onClick={(e) => {
         onClick && onClick(e);
         to &&
@@ -28,7 +30,18 @@ function MyButton({
           });
       }}
       {...rest}>
-      {children}
+      {children ||
+        (to && (
+          <>
+            {to && (
+              <Link
+                to={to}
+                style={{ position: "absolute", inset: 0, opacity: 0 }}>
+                {children}
+              </Link>
+            )}
+          </>
+        ))}
     </Button>
     // <button
     //   className={classNames(
