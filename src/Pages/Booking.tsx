@@ -10,32 +10,9 @@ import { checkIfTime2HoursOkToBooking } from "@/Utils/checkIfTimeOk";
 import { dateFormat } from "@/Utils/customDate";
 import bank from "@Pub/qr_bank.jpg";
 import momo from "@Pub/qr_momo.jpg";
-import {
-  BarsOutlined,
-  LikeOutlined,
-  PoweroffOutlined,
-} from "@ant-design/icons";
-import {
-  Card,
-  Col,
-  Descriptions,
-  Image,
-  Result,
-  Row,
-  Segmented,
-  Skeleton,
-  Spin,
-  Statistic,
-  Steps,
-  Typography,
-} from "antd";
-import {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { BarsOutlined, LikeOutlined, PoweroffOutlined } from "@ant-design/icons";
+import { Card, Col, Descriptions, Image, Result, Row, Segmented, Skeleton, Spin, Statistic, Steps, Typography } from "antd";
+import { ReactNode, createContext, useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useSWR from "swr";
 
@@ -174,9 +151,7 @@ function Booking() {
   };
 
   useEffect(() => {
-    setTotalPaid(
-      trip ? trip.price * selectedId.length + (trip.extraPrice || 0) : 0
-    );
+    setTotalPaid(trip ? trip.price * selectedId.length + (trip.extraPrice || 0) : 0);
   }, [selectedId]);
 
   const value: IBookingContext = {
@@ -200,9 +175,7 @@ function Booking() {
   return (
     <BookingContext.Provider value={value}>
       <div>
-        <Typography.Title style={{ padding: "20px" }}>
-          {!allowBooking ? <>Chọn chuyến khác nhé</> : stepsItems[step].title}
-        </Typography.Title>
+        <Typography.Title style={{ padding: "20px" }}>{!allowBooking ? <>Chọn chuyến khác nhé</> : stepsItems[step].title}</Typography.Title>
         <MyContainer>
           {allowBooking && (
             <MyContainer.Row justify={"center"}>
@@ -243,19 +216,7 @@ function Booking() {
                 </Card>
               </Col>
 
-              <ContentWrapper>
-                {step == 0 ? (
-                  <Step1 />
-                ) : step == 1 ? (
-                  <Step2 />
-                ) : step == 2 ? (
-                  <Step3 onSubmit={submitHandle} />
-                ) : step == 3 ? (
-                  <Step4 />
-                ) : (
-                  <></>
-                )}
-              </ContentWrapper>
+              <ContentWrapper>{step == 0 ? <Step1 /> : step == 1 ? <Step2 /> : step == 2 ? <Step3 onSubmit={submitHandle} /> : step == 3 ? <Step4 /> : <></>}</ContentWrapper>
 
               <BusSeatMapWrapped />
             </MyContainer.Row>
@@ -278,9 +239,7 @@ function Step1() {
           title="Ghế còn trống"
           value={bus?.busSeats?.array.filter((r) => r.available).length}
           prefix={<LikeOutlined />}
-          suffix={
-            bus && bus.busSeats ? `/${bus.busSeats.array.length}` : undefined
-          }
+          suffix={bus && bus.busSeats ? `/${bus.busSeats.array.length}` : undefined}
           loading={!bus}
         />
       </Col>
@@ -338,10 +297,7 @@ function Step2() {
     <Row gutter={[12, 12]}>
       <NextBackBtn
         disableBack={isPaid}
-        disableNext={
-          (payment === "Momo" && !isPaid) ||
-          (payment === "Chuyển khoản" && !isPaid)
-        }
+        disableNext={(payment === "Momo" && !isPaid) || (payment === "Chuyển khoản" && !isPaid)}
       />
 
       <Col span={24}>
@@ -361,17 +317,12 @@ function Step2() {
           <MyContainer.Row justify={"center"}>
             {payment === "Tiền mặt" ? (
               <Col span={24}>
-                <p>
-                  Đặt vé xong bạn có thể đến trạm và thanh toán tiền vé cho nhân
-                  viên.
-                </p>
+                <p>Đặt vé xong bạn có thể đến trạm và thanh toán tiền vé cho nhân viên.</p>
               </Col>
             ) : payment === "Momo" ? (
               <>
                 <Col>
-                  <p style={{ textAlign: "center" }}>
-                    Hãy quét mã để thanh toán
-                  </p>
+                  <p style={{ textAlign: "center" }}>Hãy quét mã để thanh toán</p>
                   <Image
                     width={"100%"}
                     src={momo}
@@ -397,18 +348,14 @@ function Step2() {
                         }, delay);
                       });
                     }}>
-                    {isPaid
-                      ? "Thanh toán thành công"
-                      : "Xác nhận thanh toán (Giả)"}
+                    {isPaid ? "Thanh toán thành công" : "Xác nhận thanh toán (Giả)"}
                   </MyButton>
                 </Col>
               </>
             ) : payment === "Chuyển khoản" ? (
               <>
                 <Col>
-                  <p style={{ textAlign: "center" }}>
-                    Hãy quét mã để thanh toán
-                  </p>
+                  <p style={{ textAlign: "center" }}>Hãy quét mã để thanh toán</p>
                   <Image
                     width={"100%"}
                     style={{ maxWidth: 300 }}
@@ -434,9 +381,7 @@ function Step2() {
                         }, delay);
                       });
                     }}>
-                    {isPaid
-                      ? "Thanh toán thành công"
-                      : "Xác nhận thanh toán (Giả)"}
+                    {isPaid ? "Thanh toán thành công" : "Xác nhận thanh toán (Giả)"}
                   </MyButton>
                 </Col>
               </>
@@ -482,13 +427,7 @@ function Step3({ onSubmit }: { onSubmit?: () => Promise<ITicket | boolean> }) {
           tip="Đang đặt vé">
           <Result
             status={booked ? (success ? "success" : "error") : "info"}
-            title={
-              booked
-                ? success
-                  ? "Đặt vé thành công"
-                  : "Đặt vé thất bại"
-                : "Xác nhận đặt vé"
-            }
+            title={booked ? (success ? "Đặt vé thành công" : "Đặt vé thất bại") : "Xác nhận đặt vé"}
             subTitle={
               booked ? (
                 success ? (
@@ -498,9 +437,7 @@ function Step3({ onSubmit }: { onSubmit?: () => Promise<ITicket | boolean> }) {
                 )
               ) : (
                 <p>
-                  Chỉ còn 1 bước nữa là bạn có thể đặt được vé rồi, bấm nút{" "}
-                  <Typography.Text strong>Xác Nhận</Typography.Text> ở bên dưới
-                  để xác nhận đặt vé nhé.
+                  Chỉ còn 1 bước nữa là bạn có thể đặt được vé rồi, bấm nút <Typography.Text strong>Xác Nhận</Typography.Text> ở bên dưới để xác nhận đặt vé nhé.
                 </p>
               )
             }
@@ -595,14 +532,7 @@ export interface IBusSeatMap {
   direction?: "horizontal" | "vertical";
   onChange?: (x: IBusSeatPos[]) => void;
 }
-export function BusSeatMap({
-  busSeat,
-  preSelected: _preSelected,
-  selected,
-  disabled,
-  direction,
-  onChange,
-}: IBusSeatMap) {
+export function BusSeatMap({ busSeat, preSelected: _preSelected, selected, disabled, direction, onChange }: IBusSeatMap) {
   const [d, setD] = useState<IBusSeatMap["direction"]>(direction);
 
   useEffect(() => {
@@ -651,12 +581,8 @@ export function BusSeatMap({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${
-          d == "horizontal" ? busSeat.row : busSeat.col
-        },1fr)`,
-        gridTemplateRows: `repeat(${
-          d == "horizontal" ? busSeat.col : busSeat.row
-        },auto)`,
+        gridTemplateColumns: `repeat(${d == "horizontal" ? busSeat.row : busSeat.col},1fr)`,
+        gridTemplateRows: `repeat(${d == "horizontal" ? busSeat.col : busSeat.row},1fr)`,
         gap: 4,
         width: "100%",
       }}>
@@ -688,13 +614,7 @@ export function BusSeatMap({
         <MyButton
           key={pos.id}
           size="small"
-          type={
-            selected.find((r) => r.id === pos.id)
-              ? "primary"
-              : !pos.available
-              ? "dashed"
-              : "default"
-          }
+          type={selected.find((r) => r.id === pos.id) ? "primary" : !pos.available ? "dashed" : "default"}
           danger={!!(_preSelected || []).find((r) => r.id === pos.id)}
           disabled={
             // disabled ? true:
@@ -716,15 +636,7 @@ export function BusSeatMap({
   );
 }
 
-function NextBackBtn({
-  disabled,
-  disableNext,
-  disableBack,
-}: {
-  disabled?: boolean;
-  disableNext?: boolean;
-  disableBack?: boolean;
-}) {
+function NextBackBtn({ disabled, disableNext, disableBack }: { disabled?: boolean; disableNext?: boolean; disableBack?: boolean }) {
   const { selectedId, onNext, onBack, step } = useContext(BookingContext);
 
   return (
@@ -732,9 +644,7 @@ function NextBackBtn({
       <Col span={12}>
         <MyButton
           type="default"
-          disabled={
-            disabled || disableBack || selectedId.length == 0 || step == 0
-          }
+          disabled={disabled || disableBack || selectedId.length == 0 || step == 0}
           block
           onClick={onBack}>
           Quay về
@@ -743,12 +653,7 @@ function NextBackBtn({
       <Col span={12}>
         <MyButton
           type="primary"
-          disabled={
-            disabled ||
-            disableNext ||
-            selectedId.length == 0 ||
-            stepsItems.length - 1 == step
-          }
+          disabled={disabled || disableNext || selectedId.length == 0 || stepsItems.length - 1 == step}
           block
           onClick={onNext}>
           Tiếp theo
@@ -759,8 +664,7 @@ function NextBackBtn({
 }
 
 function BusSeatMapWrapped() {
-  const { isLoading, bus, selectedId, updateBusSelectedSeat, step } =
-    useContext(BookingContext);
+  const { isLoading, bus, selectedId, updateBusSelectedSeat, step } = useContext(BookingContext);
 
   return (
     <Col xs={{ span: 24 }}>

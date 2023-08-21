@@ -9,27 +9,11 @@ import { ITicket } from "@/Services/ITicket";
 import { ITrip } from "@/Services/ITrip";
 import { TicketService } from "@/Services/TicketService";
 import fetcher from "@/Services/fetcher";
-import {
-  checkIfTime60MOkToUpdateTicket,
-  checkIfTimePassed,
-} from "@/Utils/checkIfTimeOk";
+import { checkIfTime60MOkToUpdateTicket, checkIfTimePassed } from "@/Utils/checkIfTimeOk";
 import { dateFormat } from "@/Utils/customDate";
 import { myCreateSearchParams } from "@/Utils/serializeFormQuery";
 import { QuestionCircleOutlined, SwapOutlined } from "@ant-design/icons";
-import {
-  Card,
-  Col,
-  Descriptions,
-  Dropdown,
-  Form,
-  Input,
-  Popconfirm,
-  Progress,
-  Skeleton,
-  Space,
-  Spin,
-  Typography,
-} from "antd";
+import { Card, Col, Descriptions, Dropdown, Form, Input, Popconfirm, Progress, Skeleton, Space, Spin, Typography } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useSWR from "swr";
@@ -43,14 +27,15 @@ function Ticket() {
   const navigate = useNavigate();
 
   const { ticketId: ticketIdParam } = useParams();
-  const url =
-    `/tickets/?` +
-    myCreateSearchParams({
-      userId: user?.id,
-      id: ticketIdParam,
-      totalSeat: true,
-      busSeat: true,
-    });
+  const url = !user
+    ? undefined
+    : `/tickets/?` +
+      myCreateSearchParams({
+        userId: user.id,
+        id: ticketIdParam,
+        totalSeat: true,
+        busSeat: true,
+      });
 
   // const [feedbackUrl, setFeedbackUrl] = useState<string>();
   const [sameTripUrl, setSameTripUrl] = useState<string>();
@@ -62,8 +47,7 @@ function Ticket() {
   const [preSelected, setPreSelected] = useState<IBusSeatPos[]>([]);
   const [busSeat, setBusSeat] = useState<IBusSeat>();
 
-  const [isCreatingFeedbackToServer, setIsCreatingFeedbackToServer] =
-    useState(false);
+  const [isCreatingFeedbackToServer, setIsCreatingFeedbackToServer] = useState(false);
 
   const [isChangingToServer, setIsChangingToServer] = useState(false);
   const [seatLoading, setSeatLoading] = useState(false);
@@ -73,18 +57,9 @@ function Ticket() {
 
   const [cantUpdateMsg, setCantUpdateMsg] = useState("");
 
-  const {
-    data: ticketDTO,
-    mutate: mutateTicket,
-    isLoading: isLoadingTicket,
-    isValidating: isValidatingTicket,
-  } = useSWR<ITicket[]>(user ? url : null, fetcher);
+  const { data: ticketDTO, mutate: mutateTicket, isLoading: isLoadingTicket, isValidating: isValidatingTicket } = useSWR<ITicket[]>(url, fetcher);
 
-  const {
-    data: sameTripDTO,
-    mutate: mutateSameTrip,
-    isValidating: isSameTripLoading,
-  } = useSWR<ITrip[]>(sameTripUrl, fetcher);
+  const { data: sameTripDTO, mutate: mutateSameTrip, isValidating: isSameTripLoading } = useSWR<ITrip[]>(sameTripUrl, fetcher);
 
   const { data: feedbackDTO, mutate: mutateFeedback } = useSWR<IFeedback[]>(
     `/feedbacks/?` +
@@ -100,7 +75,12 @@ function Ticket() {
         pathname: "/login",
       });
     }
-  }, [user]);
+    if (!ticketIdParam || (!isLoadingTicket && !ticketDTO)) {
+      navigate({
+        pathname: "/tickets",
+      });
+    }
+  }, [user, ticketIdParam]);
 
   // useEffect(() => {
   //   console.log({ feedbackUrl });
@@ -109,6 +89,8 @@ function Ticket() {
 
   useEffect(() => {
     console.log({ ticketDTO, url });
+
+    // if(!ticketDTO)
     if (!ticketDTO) return;
     const [t] = ticketDTO;
 
@@ -123,18 +105,25 @@ function Ticket() {
     setBusSeat(t.tripId.busId.busSeats);
     setTripToUpdate(undefined);
 
-    const condition: boolean = checkIfTime60MOkToUpdateTicket(t.tripId.startAt);
-    const condition1: boolean = checkIfTimePassed(t.tripId.startAt);
+    const isTripNotDepartingClose: boolean = checkIfTime60MOkToUpdateTicket(t.tripId.startAt);
+    const isTripPassedCurrentTime: boolean = checkIfTimePassed(t.tripId.startAt);
 
-    setAllowUpdate(condition && !condition1 && !t.isPaid);
+    setAllowUpdate(isTripNotDepartingClose && !isTripPassedCurrentTime && !t.isPaid);
     if (t.isPaid) {
       setCantUpdateMsg("Không thể cập nhật vì đã thanh toán");
+      return;
     }
-    if (!condition) {
+    if (!isTripNotDepartingClose) {
       setCantUpdateMsg("Không thể cập nhật vì chuyến sắp chạy");
     }
-    if (condition1) {
+    if (isTripPassedCurrentTime) {
       setCantUpdateMsg("Chuyến trong quá khứ");
+    }
+    if (isTripPassedCurrentTime && !t.isPaid) {
+      setCantUpdateMsg("Bạn đã lỡ chuyến và  không trả tiền");
+    }
+    if (isTripPassedCurrentTime && t.isPaid) {
+      setCantUpdateMsg("Bạn đã đi chuyến này rồi!");
     }
   }, [ticketDTO]);
 
@@ -336,13 +325,7 @@ function Ticket() {
               <Spin spinning={isValidatingTicket || seatLoading}>
                 {busSeat && (
                   <BusSeatMap
-                    disabled={
-                      !allowUpdate
-                        ? true
-                        : isSeatUpdateSuccess ||
-                          isChangingToServer ||
-                          seatLoading
-                    }
+                    disabled={!allowUpdate ? true : isSeatUpdateSuccess || isChangingToServer || seatLoading}
                     busSeat={busSeat}
                     onChange={onSeatChangeHandle}
                     preSelected={preSelected}
@@ -426,9 +409,7 @@ function Ticket() {
                       <Form.Item<FeedbackFieldType>
                         name="comment"
                         label="Nội dung đánh giá"
-                        rules={[
-                          { required: true, message: "Hãy điền gì đó nhé" },
-                        ]}>
+                        rules={[{ required: true, message: "Hãy điền gì đó nhé" }]}>
                         <Input.TextArea
                           rows={4}
                           placeholder="Điền đánh giá"
@@ -518,45 +499,43 @@ function TicketInformation({
           {allowUpdate && (
             <Dropdown
               menu={{
-                items: tripHasSameRoute.length
-                  ? tripHasSameRoute.map((r) => ({
-                      key: r.id,
-                      disabled: !checkIfTime60MOkToUpdateTicket(r.startAt),
-                      label: (
-                        <Typography.Text
-                          strong={r.id === ticket.tripId.id}
-                          italic={r.id === ticket.tripId.id}
-                          disabled={!checkIfTime60MOkToUpdateTicket(r.startAt)}>
-                          {dateFormat(r.startAt)}
-                        </Typography.Text>
-                      ),
-                      onClick: () => {
-                        onTripChange(r);
-                      },
-                    }))
-                  : [
-                      {
-                        key: "no other trip",
-                        label: (
-                          <Typography.Text key={"Không có chuyến khác"}>
-                            Không có chuyến khác
-                          </Typography.Text>
-                        ),
-                      },
-                    ],
+                items:
+                  tripHasSameRoute.length > 1
+                    ? [
+                        {
+                          type: "group",
+                          key: "justALabel",
+                          label: <Typography.Text>Các chuyến khác cùng tuyến</Typography.Text>,
+                          children: tripHasSameRoute.map((r) => ({
+                            key: r.id,
+                            disabled: !checkIfTime60MOkToUpdateTicket(r.startAt),
+                            label: (
+                              <Typography.Text
+                                strong={r.id === ticket.tripId.id}
+                                italic={r.id === ticket.tripId.id}
+                                disabled={!checkIfTime60MOkToUpdateTicket(r.startAt)}>
+                                {dateFormat(r.startAt)}
+                              </Typography.Text>
+                            ),
+                            onClick: () => {
+                              onTripChange(r);
+                            },
+                          })),
+                        },
+                      ]
+                    : [
+                        {
+                          key: "no other trip",
+                          label: <Typography.Text key={"Không có chuyến khác"}>Không có chuyến khác</Typography.Text>,
+                        },
+                      ],
               }}>
               {/* Change trip btn */}
               <MyButton
                 size="small"
                 shape="circle"
                 loading={isSameTripLoading}
-                type={
-                  tripToUpdate
-                    ? tripToUpdate.id !== ticket.tripId.id
-                      ? "primary"
-                      : "default"
-                    : "default"
-                }
+                type={tripToUpdate ? (tripToUpdate.id !== ticket.tripId.id ? "primary" : "default") : "default"}
                 icon={<SwapOutlined />}
               />
 
@@ -567,47 +546,33 @@ function TicketInformation({
           {tripToUpdate && <>{dateFormat(tripToUpdate.startAt)}</>}
         </Space>
       </Descriptions.Item>
-      <Descriptions.Item label="Điểm đi">
-        {ticket.tripId.routeId.startLocation}
-      </Descriptions.Item>
-      <Descriptions.Item label="Điểm đến">
-        {ticket.tripId.routeId.endLocation}
-      </Descriptions.Item>
-      <Descriptions.Item label="">
-        {ticket.isPaid ? "Đã thanh toán" : "Chưa thanh toán"}
-      </Descriptions.Item>
+      <Descriptions.Item label="Điểm đi">{ticket.tripId.routeId.startLocation}</Descriptions.Item>
+      <Descriptions.Item label="Điểm đến">{ticket.tripId.routeId.endLocation}</Descriptions.Item>
+      <Descriptions.Item label="">{ticket.isPaid ? "Đã thanh toán" : "Chưa thanh toán"}</Descriptions.Item>
       <Descriptions.Item
         span={2}
         label="Thanh toán với">
         {ticket.paidWith}
       </Descriptions.Item>
-      <Descriptions.Item label="Tổng tiền">
-        {ticket.paidPrice.toLocaleString()} vnd
-      </Descriptions.Item>
+      <Descriptions.Item label="Tổng tiền">{ticket.paidPrice.toLocaleString()} vnd</Descriptions.Item>
       <Descriptions.Item
         span={2}
         label="Nhân viên in vé">
         {ticket.staffId ? (
           <>
-            [{ticket.staffId.id}] - {ticket.staffId.lastName}{" "}
-            {ticket.staffId.firstName}
+            [{ticket.staffId.id}] - {ticket.staffId.lastName} {ticket.staffId.firstName}
           </>
         ) : (
           <>Chưa có</>
         )}
       </Descriptions.Item>
-      <Descriptions.Item label="Số chỗ ngồi">
-        {ticket.totalSeat}
-      </Descriptions.Item>
+      <Descriptions.Item label="Số chỗ ngồi">{ticket.totalSeat}</Descriptions.Item>
       <Descriptions.Item
         span={2}
         label="Tên tài xế">
-        [{ticket.tripId.driverId.id}] - {ticket.tripId.driverId.lastName}{" "}
-        {ticket.tripId.driverId.firstName}
+        [{ticket.tripId.driverId.id}] - {ticket.tripId.driverId.lastName} {ticket.tripId.driverId.firstName}
       </Descriptions.Item>
-      <Descriptions.Item label="Biển số xe">
-        {ticket.tripId.busId.licensePlate}
-      </Descriptions.Item>{" "}
+      <Descriptions.Item label="Biển số xe">{ticket.tripId.busId.licensePlate}</Descriptions.Item>{" "}
       <Descriptions.Item
         label="Tạo vé lúc"
         span={3}>

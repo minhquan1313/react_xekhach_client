@@ -31,6 +31,7 @@ function TripSearchResult({ url }: IProps) {
               return (
                 isTimeOk && (
                   <Col
+                    key={trip.id}
                     xs={{ span: 24 }}
                     md={{ span: 24 / 2 }}
                     xl={{ span: 24 / 3 }}
@@ -46,8 +47,7 @@ function TripSearchResult({ url }: IProps) {
                       }}>
                       <div>Khởi hành: {dateFormat(trip.startAt)}</div>
                       <div>
-                        {trip.routeId.startLocation} {"->"}{" "}
-                        {trip.routeId.endLocation}
+                        {trip.routeId.startLocation} {"->"} {trip.routeId.endLocation}
                       </div>
                       {/* <div>{trip.busId.licensePlate}</div>
                       <div>

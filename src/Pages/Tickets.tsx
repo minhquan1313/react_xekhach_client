@@ -4,7 +4,7 @@ import { ITicket } from "@/Services/ITicket";
 import fetcher from "@/Services/fetcher";
 import { dateFormat } from "@/Utils/customDate";
 import { myCreateSearchParams } from "@/Utils/serializeFormQuery";
-import { Card, Col } from "antd";
+import { Card, Col, Typography } from "antd";
 import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useSWR from "swr";
@@ -19,11 +19,7 @@ function Tickets() {
       userId: user?.id,
       totalSeat: true,
     });
-  const {
-    data: ticketDTO,
-    isLoading,
-    isValidating,
-  } = useSWR<ITicket[]>(url, fetcher);
+  const { data: ticketDTO, isLoading, isValidating } = useSWR<ITicket[]>(url, fetcher);
 
   useEffect(() => {
     if (!user) {
@@ -46,19 +42,29 @@ function Tickets() {
         <Col span={24}>Loading</Col>
       ) : (
         ticketDTO &&
-        ticketDTO.map((r) => (
-          <Col
-            xs={{ span: 24 }}
-            md={{ span: 24 / 2 }}
-            xl={{ span: 24 / 3 }}
-            xxl={{ span: 24 / 4 }}
-            key={r.id}>
-            <TicketCard ticket={r} />
-          </Col>
+        (!ticketDTO.length ? (
+          <Typography.Title>Chưa có vé</Typography.Title>
+        ) : (
+          ticketDTO.map((r) => (
+            <Col
+              xs={{ span: 24 }}
+              md={{ span: 24 / 2 }}
+              xl={{ span: 24 / 3 }}
+              xxl={{ span: 24 / 4 }}
+              key={r.id}>
+              <TicketCard ticket={r} />
+            </Col>
+          ))
         ))
       )}
 
-      {isValidating && !isLoading && <Col span={24}>Tải thêm dữ liệu</Col>}
+      {isValidating && !isLoading && (
+        <Col
+          span={24}
+          style={{ textAlign: "center" }}>
+          Đang tải thêm dữ liệu
+        </Col>
+      )}
     </MyContainer.Row>
   );
 }
@@ -83,8 +89,7 @@ function TicketCard({ ticket }: ITicketProp) {
       <div>{ticket.paidWith}</div>
       <div>{ticket.totalSeat}</div>
       <div>
-        {ticket.tripId.routeId.startLocation} -{" "}
-        {ticket.tripId.routeId.endLocation}
+        {ticket.tripId.routeId.startLocation} - {ticket.tripId.routeId.endLocation}
       </div>
       <div>{dateFormat(ticket.tripId.startAt)}</div>
     </Card>
