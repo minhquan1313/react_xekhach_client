@@ -17,7 +17,9 @@ import useSWR from "swr";
 type TFieldType = {
   startLocation?: string;
   endLocation?: string;
-  rangeTime?: [dayjs.Dayjs, dayjs.Dayjs];
+  // rangeTime?: [dayjs.Dayjs, dayjs.Dayjs];
+  rangeTimeFrom?: dayjs.Dayjs;
+  rangeTimeTo?: dayjs.Dayjs;
 };
 interface IProps {
   onSearchParamChange?: (query: URLSearchParams) => void;
@@ -27,16 +29,10 @@ function TripSearch({ onSearchParamChange }: IProps) {
   const navigate = useNavigate();
   const [q] = useSearchParams();
 
-  const [startLocation, setStartLocation] = useState(
-    q.get("startLocation") || undefined
-  );
-  const [endLocation, setEndLocation] = useState(
-    q.get("endLocation") || undefined
-  );
+  const [startLocation, setStartLocation] = useState(q.get("startLocation") || undefined);
+  const [endLocation, setEndLocation] = useState(q.get("endLocation") || undefined);
   const sTime = q.get("timeFrom");
-  const [startTime, setStartTime] = useState(
-    sTime ? parseInt(sTime) : undefined
-  );
+  const [startTime, setStartTime] = useState(sTime ? parseInt(sTime) : undefined);
   const eTime = q.get("timeTo");
   const [endTime, setEndTime] = useState(eTime ? parseInt(eTime) : undefined);
 
@@ -52,16 +48,19 @@ function TripSearch({ onSearchParamChange }: IProps) {
   };
 
   const onFinish = (values: TFieldType) => {
-    const { startLocation, endLocation, rangeTime } = values;
+    // const { startLocation, endLocation, rangeTime } = values;
+    const { startLocation, endLocation, rangeTimeFrom, rangeTimeTo } = values;
 
     setStartLocation(startLocation);
     setEndLocation(endLocation);
     let startTime: number | undefined = undefined;
     let endTime: number | undefined = undefined;
-    if (rangeTime) {
-      startTime = dateParse(rangeTime[0]);
-      endTime = dateParse(rangeTime[1]);
+    if (rangeTimeFrom) {
+      startTime = dateParse(rangeTimeFrom);
       setStartTime(startTime);
+    }
+    if (rangeTimeTo) {
+      endTime = dateParse(rangeTimeTo);
       setEndTime(endTime);
     }
     const obj: ITripSearch = {
@@ -86,14 +85,10 @@ function TripSearch({ onSearchParamChange }: IProps) {
     if (!dataRoute) return;
     console.log({ dataRoute });
 
-    const starts = [
-      ...new Set(dataRoute.map(({ startLocation }) => startLocation)),
-    ].map((r) => ({ value: r }));
+    const starts = [...new Set(dataRoute.map(({ startLocation }) => startLocation))].map((r) => ({ value: r }));
     setOptionStarts(starts);
 
-    const ends = [
-      ...new Set(dataRoute.map(({ endLocation }) => endLocation)),
-    ].map((r) => ({ value: r }));
+    const ends = [...new Set(dataRoute.map(({ endLocation }) => endLocation))].map((r) => ({ value: r }));
     setOptionEnds(ends);
   }, [dataRoute]);
 
@@ -128,10 +123,9 @@ function TripSearch({ onSearchParamChange }: IProps) {
           remember: true,
           startLocation: startLocation,
           endLocation: endLocation,
-          rangeTime:
-            startTime && endTime
-              ? [dayjs(startTime), dayjs(endTime)]
-              : undefined,
+          // rangeTime: startTime && endTime ? [dayjs(startTime), dayjs(endTime)] : undefined,
+          rangeTimeFrom: startTime ? dayjs(startTime) : undefined,
+          rangeTimeTo: endTime ? dayjs(startTime) : undefined,
         }}
         layout="vertical"
         onFinish={onFinish}
@@ -196,16 +190,36 @@ function TripSearch({ onSearchParamChange }: IProps) {
           />
         </Form.Item>
 
-        <Form.Item<TFieldType>
+        {/* <Form.Item<TFieldType>
           label="Khoảng thời gian"
           name="rangeTime">
           <DatePicker.RangePicker
             showTime
-            value={
-              endTime && startTime
-                ? [toDayJs(startTime), toDayJs(endTime)]
-                : undefined
-            }
+            value={endTime && startTime ? [toDayJs(startTime), toDayJs(endTime)] : undefined}
+            locale={locale}
+            format={pattern_no_second}
+          />
+        </Form.Item> */}
+        <Form.Item<TFieldType>
+          label="Từ"
+          name="rangeTimeFrom">
+          <DatePicker
+            showTime
+            // ={}
+            // defaultValue={startTime ? toDayJs(startTime) : undefined}
+            defaultValue={startTime ? toDayJs(startTime) : undefined}
+            changeOnBlur={true}
+            locale={locale}
+            format={pattern_no_second}
+          />
+        </Form.Item>
+        <Form.Item<TFieldType>
+          label="Đến"
+          name="rangeTimeTo">
+          <DatePicker
+            showTime
+            defaultValue={endTime ? toDayJs(endTime) : undefined}
+            changeOnBlur={true}
             locale={locale}
             format={pattern_no_second}
           />

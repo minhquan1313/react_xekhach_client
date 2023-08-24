@@ -151,7 +151,7 @@ function Booking() {
   };
 
   useEffect(() => {
-    setTotalPaid(trip ? trip.price * selectedId.length + (trip.extraPrice || 0) : 0);
+    setTotalPaid(trip ? (trip.price + (trip.extraPrice || 0)) * selectedId.length : 0);
   }, [selectedId]);
 
   const value: IBookingContext = {
@@ -260,7 +260,7 @@ function Step1() {
       </Col>
       <Col span={12}>
         <Statistic
-          title="Phụ phí"
+          title="Phụ phí/ghế"
           value={trip ? trip.extraPrice : undefined}
           suffix="VNĐ"
           loading={trip == null}
