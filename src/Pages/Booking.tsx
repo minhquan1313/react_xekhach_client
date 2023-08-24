@@ -611,26 +611,33 @@ export function BusSeatMap({ busSeat, preSelected: _preSelected, selected, disab
             </MyButton>
           ))} */}
       {busSeat.array.map((pos) => (
-        <MyButton
-          key={pos.id}
-          size="small"
-          type={selected.find((r) => r.id === pos.id) ? "primary" : !pos.available ? "dashed" : "default"}
-          danger={!!(_preSelected || []).find((r) => r.id === pos.id)}
-          disabled={
-            // disabled ? true:
-            pos.userChosen ? false : !pos.available
-          }
-          onClick={() => {
-            !disabled && onSelect(pos);
-          }}
+        <div
           style={{
-            height: "100%",
+            display: "flex",
             aspectRatio: "1/1",
             gridColumn: d == "horizontal" ? busSeat.row + 1 - pos.y : pos.x,
             gridRow: d == "horizontal" ? pos.x : pos.y,
-          }}>
-          {parseSeatName(pos)}
-        </MyButton>
+          }}
+          key={pos.id}>
+          <MyButton
+            size="small"
+            type={selected.find((r) => r.id === pos.id) ? "primary" : !pos.available ? "dashed" : "default"}
+            danger={!!(_preSelected || []).find((r) => r.id === pos.id)}
+            disabled={
+              // disabled ? true:
+              pos.userChosen ? false : !pos.available
+            }
+            style={{
+              display: "block",
+              height: "100%",
+              flex: 1,
+            }}
+            onClick={() => {
+              !disabled && onSelect(pos);
+            }}>
+            {parseSeatName(pos)}
+          </MyButton>
+        </div>
       ))}
     </div>
   );
